@@ -203,8 +203,6 @@
 </head>
 <body>
   <canvas id="c" aria-label="Хөдөлгөөнт зураг"></canvas>
-
-  <!-- 1. Эхлэх дэлгэц -->
   <div id="intro" class="overlay">
     <div class="card">
       <div class="icon">♥</div>
@@ -213,17 +211,13 @@
       <button id="startBtn" class="primary">▶&nbsp; Бэлэн</button>
     </div>
   </div>
-
-  <!-- 2. Сонголтын цэс -->
   <div id="picker" class="overlay picker hide">
     <div class="picker-inner">
       <h2>Нэгийг нь сонгоорой ✨</h2>
-      <p class="sub">Чамд зориулсан 6 бэлэг</p>
+      <p class="sub"> 6 бэлэг</p>
       <div id="grid" class="grid"></div>
     </div>
   </div>
-
-  <!-- 3. Тоглуулах үеийн товчнууд -->
   <nav id="controls" class="controls" hidden>
     <button id="menu" class="ctrl">←&nbsp; Цэс</button>
     <button id="replay" class="ctrl">↻&nbsp; Again</button>
@@ -231,28 +225,18 @@
   </nav>
 
   <script>
-    // =====================================================
-    //  ТОХИРГОО
-    // =====================================================
     const CONFIG = {
       audioDuration: 8.5,   // Дуу хэдэн секунд тоглох
       drawMs: 6500,         // Зураг зурж дуусах хугацаа (мс)
     };
-
-    // 6 сонголт. song = mp3 файлын нэр, start = хэддүгээр секундээс эхлэх,
-    // message = төгсгөлд гарах бичиг (хоосон "" бол гарахгүй)
     const SCENES = [
       { id: "heart",     emoji: "💖", name: "Солонгон зүрх",   song: "song.mp3", start: 0, message: "" },
-      { id: "rose",      emoji: "🌷", name: "Ягаан цэцэг",     song: "song.mp3", start: 0, message: "Чамд зориулав 🌷" },
+      { id: "rose",      emoji: "🌷", name: "Ягаан цэцэг",     song: "song.mp3", start: 0, message: "" },
       { id: "meadow",    emoji: "🌿", name: "Ногоон байгаль",  song: "song.mp3", start: 0, message: "" },
-      { id: "stars",     emoji: "✨", name: "Оддын зүрх",      song: "song.mp3", start: 0, message: "Чамд хайртай" },
+      { id: "stars",     emoji: "✨", name: "Оддын зүрх",      song: "song.mp3", start: 0, message: "" },
       { id: "sunflower", emoji: "🌻", name: "Наран цэцэг",     song: "song.mp3", start: 0, message: "" },
       { id: "sakura",    emoji: "🌸", name: "Интоорын цэцэг",  song: "song.mp3", start: 0, message: "" },
     ];
-
-    // =====================================================
-    //  Туслах функцууд
-    // =====================================================
     const D = CONFIG.drawMs;
     const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
     const easeOut = x => 1 - Math.pow(1 - x, 3);
@@ -287,11 +271,6 @@
       ctx.fill();
     }
 
-    // =====================================================
-    //  6 ДҮР ЗУРАГ
-    //  init() – санамсаргүй өгөгдөл бэлдэнэ
-    //  render(ctx, w, h, t, S, box) – t миллисекундэд байх зургийг бүтнээр нь зурна
-    // =====================================================
     const IMPL = {};
 
     // ---------- 1. Солонгон зүрх ----------
