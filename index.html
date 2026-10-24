@@ -2,7 +2,6 @@
 <html lang="mn">
 <head>
   <meta charset="utf-8">
-  <!-- viewport-fit=cover: iPhone-ийн "notch" болон доод зурвас хүртэл дэлгэц дүүргэнэ -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -30,22 +29,22 @@
       -webkit-user-select: none;
       user-select: none;
     }
-    canvas {
+    canvas#c {
       position: fixed;
       inset: 0;
       width: 100vw;
       height: 100vh;
-      height: 100dvh;           /* iPhone Safari-ийн хаягийн мөрөнд зөв тохирно */
+      height: 100dvh;
       display: block;
-      transform-origin: center;
     }
-    canvas.beat { animation: beat 1.4s ease-in-out infinite; }
     @keyframes beat {
       0%, 100% { transform: scale(1); }
       15%      { transform: scale(1.025); }
       30%      { transform: scale(1); }
       45%      { transform: scale(1.02); }
     }
+
+    /* ---------- Overlay (эхлэх дэлгэц, цэс) ---------- */
     .overlay {
       position: fixed;
       inset: 0;
@@ -53,10 +52,10 @@
       place-items: center;
       padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
       background: radial-gradient(circle at 50% 45%, rgba(255, 77, 109, 0.18), transparent 60%), var(--bg);
-      transition: opacity 0.6s ease, visibility 0.6s;
+      transition: opacity 0.5s ease, visibility 0.5s;
       z-index: 10;
     }
-    .overlay.hide { opacity: 0; visibility: hidden; }
+    .overlay.hide { opacity: 0; visibility: hidden; pointer-events: none; }
 
     .card { text-align: center; max-width: 340px; }
     .icon {
@@ -66,9 +65,8 @@
       animation: beat 1.4s ease-in-out infinite;
       text-shadow: 0 0 24px rgba(255, 77, 109, 0.7);
     }
-    h1 {
+    h1, h2 {
       margin: 18px 0 8px;
-      font-size: clamp(28px, 8vw, 40px);
       font-weight: 700;
       letter-spacing: -0.02em;
       background: linear-gradient(90deg, #ff4d6d, #ffb703, #06d6a0, #4cc9f0, #c77dff);
@@ -76,12 +74,15 @@
       background-clip: text;
       color: transparent;
     }
-    .card p {
+    h1 { font-size: clamp(28px, 8vw, 40px); }
+    h2 { font-size: clamp(24px, 7vw, 34px); margin-top: 8px; }
+    .card p, .sub {
       margin: 0 0 28px;
       font-size: 15px;
       line-height: 1.5;
       color: var(--muted);
     }
+    .sub { margin-bottom: 20px; }
 
     .primary {
       min-height: 52px;
@@ -99,17 +100,76 @@
     }
     .primary:active { transform: scale(0.96); }
 
-    /* ---------- Доод удирдлагын хэсэг ---------- */
+    /* ---------- Сонголтын цэс ---------- */
+    .picker {
+      display: block;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+    .picker-inner {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+      padding-bottom: 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (min-width: 640px) {
+      .grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    }
+    .item {
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      font: inherit;
+      color: var(--text);
+      text-align: left;
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      background: var(--glass);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.2s ease;
+      animation: rise 0.5s ease both;
+      animation-delay: calc(var(--i) * 70ms);
+    }
+    .item:hover { border-color: rgba(255, 77, 109, 0.6); }
+    .item:active { transform: scale(0.96); }
+    .thumb {
+      display: block;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      background: #111;
+    }
+    .label {
+      padding: 10px 12px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ---------- Доод удирдлага ---------- */
     .controls {
       position: fixed;
       left: 50%;
       bottom: calc(16px + env(safe-area-inset-bottom));
       transform: translateX(-50%);
       display: flex;
-      gap: 10px;
+      gap: 6px;
       padding: 6px;
       border-radius: 999px;
-      background: var(--glass);
+      background: rgba(20, 16, 30, 0.45);
       border: 1px solid var(--glass-border);
       -webkit-backdrop-filter: blur(14px);
       backdrop-filter: blur(14px);
@@ -117,33 +177,34 @@
       transition: opacity 0.4s ease;
     }
     .controls[hidden] { display: flex; opacity: 0; pointer-events: none; }
-
     .ctrl {
-      min-width: 44px;           
+      min-width: 44px;
       min-height: 44px;
-      padding: 0 18px;
+      padding: 0 16px;
       font: inherit;
       font-size: 15px;
       font-weight: 500;
-      color: var(--text);
+      color: #fff;
       border: 0;
       border-radius: 999px;
       background: transparent;
       cursor: pointer;
+      white-space: nowrap;
       transition: background 0.2s ease, transform 0.15s ease;
     }
-    .ctrl:hover { background: rgba(255, 255, 255, 0.1); }
+    .ctrl:hover { background: rgba(255, 255, 255, 0.12); }
     .ctrl:active { transform: scale(0.94); }
     .ctrl.icon-only { padding: 0; width: 44px; font-size: 18px; }
 
     @media (prefers-reduced-motion: reduce) {
-      canvas.beat, .icon { animation: none; }
+      .icon, .item { animation: none; }
     }
   </style>
 </head>
 <body>
-  <canvas id="c" aria-label="Өнгөт шугамаар зурсан зүрх"></canvas>
+  <canvas id="c" aria-label="Хөдөлгөөнт зураг"></canvas>
 
+  <!-- 1. Эхлэх дэлгэц -->
   <div id="intro" class="overlay">
     <div class="card">
       <div class="icon">♥</div>
@@ -153,32 +214,614 @@
     </div>
   </div>
 
+  <!-- 2. Сонголтын цэс -->
+  <div id="picker" class="overlay picker hide">
+    <div class="picker-inner">
+      <h2>Нэгийг нь сонгоорой ✨</h2>
+      <p class="sub">Чамд зориулсан 6 бэлэг</p>
+      <div id="grid" class="grid"></div>
+    </div>
+  </div>
+
+  <!-- 3. Тоглуулах үеийн товчнууд -->
   <nav id="controls" class="controls" hidden>
+    <button id="menu" class="ctrl">←&nbsp; Цэс</button>
     <button id="replay" class="ctrl">↻&nbsp; Again</button>
     <button id="sound" class="ctrl icon-only" aria-label="Дуу унтраах">🔊</button>
   </nav>
 
   <script>
-    
+    // =====================================================
+    //  ТОХИРГОО
+    // =====================================================
     const CONFIG = {
-      audioSrc: "song.mp3",   
-      audioStart: 0,          
-      audioDuration: 8.5,       
-      drawMs: 6500,           
+      audioDuration: 8.5,   // Дуу хэдэн секунд тоглох
+      drawMs: 6500,         // Зураг зурж дуусах хугацаа (мс)
     };
+
+    // 6 сонголт. song = mp3 файлын нэр, start = хэддүгээр секундээс эхлэх,
+    // message = төгсгөлд гарах бичиг (хоосон "" бол гарахгүй)
+    const SCENES = [
+      { id: "heart",     emoji: "💖", name: "Солонгон зүрх",   song: "song.mp3", start: 0, message: "" },
+      { id: "rose",      emoji: "🌷", name: "Ягаан цэцэг",     song: "song.mp3", start: 0, message: "Чамд зориулав 🌷" },
+      { id: "meadow",    emoji: "🌿", name: "Ногоон байгаль",  song: "song.mp3", start: 0, message: "" },
+      { id: "stars",     emoji: "✨", name: "Оддын зүрх",      song: "song.mp3", start: 0, message: "Чамд хайртай" },
+      { id: "sunflower", emoji: "🌻", name: "Наран цэцэг",     song: "song.mp3", start: 0, message: "" },
+      { id: "sakura",    emoji: "🌸", name: "Интоорын цэцэг",  song: "song.mp3", start: 0, message: "" },
+    ];
+
+    // =====================================================
+    //  Туслах функцууд
+    // =====================================================
+    const D = CONFIG.drawMs;
+    const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+    const easeOut = x => 1 - Math.pow(1 - x, 3);
+    const easeInOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+    const easeBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const TAU = Math.PI * 2;
+
+    // Зүрхний томьёо (Python кодынх)
+    function heartXY(a) {
+      return [
+        16 * Math.pow(Math.sin(a), 3),
+        13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a),
+      ];
+    }
+
+    // Зүрхний цохилт шиг томрох/багасах
+    function beatScale(t) {
+      const x = (((t % 1400) + 1400) % 1400) / 1400;
+      let k;
+      if (x < 0.15) k = x / 0.15;
+      else if (x < 0.3) k = 1 - (x - 0.15) / 0.15;
+      else if (x < 0.45) k = 0.8 * (x - 0.3) / 0.15;
+      else k = 0.8 * (1 - (x - 0.45) / 0.55);
+      return 1 + 0.03 * k;
+    }
+
+    function circle(ctx, x, y, r) {
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(0.1, r), 0, TAU);
+      ctx.fill();
+    }
+
+    // =====================================================
+    //  6 ДҮР ЗУРАГ
+    //  init() – санамсаргүй өгөгдөл бэлдэнэ
+    //  render(ctx, w, h, t, S, box) – t миллисекундэд байх зургийг бүтнээр нь зурна
+    // =====================================================
+    const IMPL = {};
+
+    // ---------- 1. Солонгон зүрх ----------
+    IMPL.heart = {
+      text: "#ffffff",
+      init() {
+        const colors = ["red", "blue", "lime", "yellow", "cyan", "magenta", "orange", "pink"];
+        const lines = [];
+        for (let k = 0; k < 120; k++) {
+          const [x, y] = heartXY(k * TAU / 120);
+          lines.push({ x: x * 15, y: y * 15, c: pick(colors) });
+        }
+        return { lines };
+      },
+      render(ctx, w, h, t, S, b) {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, w, h);
+        const p = t / D;
+        const u = Math.min(b.w * 0.94 / 500, b.h / 470);
+        const count = Math.min(120, Math.floor(clamp(p) * 120) + 1);
+
+        ctx.save();
+        ctx.translate(b.x + b.w / 2, b.y + b.h / 2);
+        if (p >= 1) { const s = beatScale(t - D); ctx.scale(s, s); }
+        ctx.lineCap = "round";
+        const sy = -(40 + 37) * u;
+        const thin = Math.max(1, u * 1.1);
+        const r = 6 * u;
+
+        // Эхлээд өргөн бүдэг (гэрэл), дараа нь нарийн тод шугам
+        for (const [lw, alpha] of [[thin * 4, 0.18], [thin, 1]]) {
+          ctx.lineWidth = lw;
+          ctx.globalAlpha = alpha;
+          for (let k = 0; k < count; k++) {
+            const l = S.lines[k];
+            const ex = l.x * u, ey = -(l.y + 37) * u;
+            ctx.strokeStyle = l.c;
+            ctx.beginPath();
+            ctx.moveTo(0, sy);
+            ctx.lineTo(ex, ey);
+            for (let j = 0; j < 8; j++) {
+              const a = j * Math.PI / 4;
+              ctx.moveTo(ex, ey);
+              ctx.lineTo(ex + r * Math.cos(a), ey + r * Math.sin(a));
+            }
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      },
+    };
+
+    // ---------- 2. Ягаан цэцэг ----------
+    IMPL.rose = {
+      text: "#ffd6e8",
+      init() {
+        const outerC = ["#ff4d6d", "#ff758f", "#ff8fa3", "#ffb3c1", "#c9184a"];
+        const innerC = ["#f72585", "#ff70a6", "#ff9770", "#b5179e"];
+        return {
+          outer: Array.from({ length: 180 }, () => pick(outerC)),
+          inner: Array.from({ length: 120 }, () => pick(innerC)),
+        };
+      },
+      render(ctx, w, h, t, S, b) {
+        const p = t / D;
+        const R = Math.min(b.w * 0.42, b.h * 0.28);
+        const fx = b.x + b.w / 2, fy = b.y + b.h * 0.38, base = b.y + b.h;
+
+        const g = ctx.createRadialGradient(fx, fy, 0, fx, fy, Math.max(w, h) * 0.8);
+        g.addColorStop(0, "#4a0e4e");
+        g.addColorStop(1, "#12001f");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+
+        // Иш
+        const cxp = fx + R * 0.35, cyp = (base + fy) / 2;
+        const bez = q => {
+          const a = 1 - q;
+          return [a * a * fx + 2 * a * q * cxp + q * q * fx, a * a * base + 2 * a * q * cyp + q * q * fy];
+        };
+        const sp = easeOut(clamp(p / 0.25));
+        ctx.strokeStyle = "#52b788";
+        ctx.lineWidth = Math.max(2, R * 0.045);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(fx, base);
+        for (let i = 1; i <= 40; i++) { const [x, y] = bez(i / 40 * sp); ctx.lineTo(x, y); }
+        ctx.stroke();
+
+        // Навч
+        for (const [q, ang] of [[0.42, -2.5], [0.6, -0.6]]) {
+          const ls = easeBack(clamp((p - 0.12 - q * 0.1) / 0.2));
+          if (ls <= 0.001) continue;
+          const [x, y] = bez(q);
+          const L = R * 0.5;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(ang);
+          ctx.scale(ls, ls);
+          ctx.fillStyle = "#40916c";
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(L * 0.5, -L * 0.32, L, 0);
+          ctx.quadraticCurveTo(L * 0.5, L * 0.32, 0, 0);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Дэлбээ
+        ctx.save();
+        ctx.translate(fx, fy);
+        if (p >= 1) { const s = beatScale(t - D); ctx.scale(s, s); }
+        const thin = Math.max(1, R * 0.006);
+        const layer = (cols, start, dur, Rf, phase) => {
+          const n = Math.floor(clamp((p - start) / dur) * cols.length);
+          for (const [lw, alpha] of [[thin * 4, 0.16], [thin, 1]]) {
+            ctx.lineWidth = lw;
+            ctx.globalAlpha = alpha;
+            for (let k = 0; k < n; k++) {
+              const a = k / cols.length * TAU;
+              const r = Rf * Math.abs(Math.sin(3 * a + phase));
+              const ex = r * Math.cos(a), ey = r * Math.sin(a);
+              ctx.strokeStyle = cols[k];
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(ex, ey);
+              ctx.stroke();
+              if (alpha === 1) { ctx.fillStyle = cols[k]; circle(ctx, ex, ey, thin * 1.6); }
+            }
+          }
+          ctx.globalAlpha = 1;
+        };
+        layer(S.outer, 0.2, 0.5, R, 0);
+        layer(S.inner, 0.4, 0.45, R * 0.6, Math.PI / 6);
+
+        // Төв
+        const cq = easeBack(clamp((p - 0.75) / 0.2));
+        if (cq > 0.001) {
+          const cg = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 0.1 * cq);
+          cg.addColorStop(0, "#fff3b0");
+          cg.addColorStop(1, "#ffb703");
+          ctx.fillStyle = cg;
+          circle(ctx, 0, 0, R * 0.1 * cq);
+        }
+        ctx.restore();
+      },
+    };
+
+    // ---------- 3. Ногоон байгаль ----------
+    IMPL.meadow = {
+      text: "#1b4332",
+      init() {
+        const greens = ["#2d6a4f", "#40916c", "#52b788", "#74c69d"];
+        const flowerC = ["#ff8fab", "#ffd166", "#ffffff", "#cdb4db", "#ff5d8f", "#a0c4ff"];
+        return {
+          blades: Array.from({ length: 160 }, () => ({ x: Math.random(), h: rand(0.05, 0.13), ph: rand(0, TAU), c: pick(greens) })),
+          flowers: Array.from({ length: 16 }, () => ({ x: rand(0.06, 0.94), y: rand(0.74, 0.92), s: rand(0.7, 1.2), c: pick(flowerC), d: rand(0.1, 0.75) }))
+            .sort((a, b) => a.y - b.y),
+          flies: Array.from({ length: 3 }, () => ({ ph: rand(0, TAU), sp: rand(0.7, 1.3), c: pick(["#ffafcc", "#ffd60a", "#bde0fe"]) })),
+          clouds: Array.from({ length: 3 }, () => ({ x: Math.random(), y: rand(0.08, 0.3), s: rand(0.8, 1.4), sp: rand(0.6, 1.2) })),
+        };
+      },
+      render(ctx, w, h, t, S) {
+        const p = t / D;
+        const m = Math.min(w, h);
+
+        // Тэнгэр
+        const sky = ctx.createLinearGradient(0, 0, 0, h);
+        sky.addColorStop(0, "#7ec8e3");
+        sky.addColorStop(0.55, "#cdeffd");
+        sky.addColorStop(0.62, "#e9f9e5");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Нар
+        const sx = w * 0.8, sy = h * 0.16 + (1 - easeOut(clamp(p / 0.4))) * h * 0.1, sr = m * 0.07;
+        const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr * 4);
+        glow.addColorStop(0, "rgba(255, 236, 150, 0.7)");
+        glow.addColorStop(1, "rgba(255, 236, 150, 0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(sx - sr * 4, sy - sr * 4, sr * 8, sr * 8);
+        ctx.fillStyle = "#ffe066";
+        circle(ctx, sx, sy, sr);
+
+        // Үүл
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        for (const c of S.clouds) {
+          const x = (((c.x + t * 0.00002 * c.sp) % 1.3) - 0.15) * w, y = c.y * h, s = m * 0.05 * c.s;
+          circle(ctx, x, y, s);
+          circle(ctx, x + s * 0.9, y + s * 0.15, s * 0.8);
+          circle(ctx, x - s * 0.9, y + s * 0.2, s * 0.7);
+        }
+
+        // Толгод
+        const hill = (baseY, amp, freq, phase, color) => {
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.moveTo(0, h);
+          for (let x = 0; x <= w + 10; x += 10) {
+            ctx.lineTo(x, baseY * h + Math.sin(x / w * freq * TAU + phase) * amp * h);
+          }
+          ctx.lineTo(w, h);
+          ctx.fill();
+        };
+        hill(0.6, 0.03, 1.2, 0.5, "#95d5b2");
+        hill(0.68, 0.025, 1.8, 2, "#74c69d");
+        hill(0.78, 0.015, 2.5, 1, "#52b788");
+
+        // Цэцгүүд
+        for (const f of S.flowers) {
+          const q = clamp((p - f.d) / 0.2);
+          if (q <= 0) continue;
+          const size = m * 0.022 * f.s * easeBack(q);
+          const fx = f.x * w, fy = f.y * h;
+          const sway = Math.sin(t * 0.0015 + f.x * 10) * size * 0.3;
+          ctx.strokeStyle = "#2d6a4f";
+          ctx.lineWidth = Math.max(1.5, size * 0.18);
+          ctx.beginPath();
+          ctx.moveTo(fx, fy + size * 3);
+          ctx.lineTo(fx + sway, fy);
+          ctx.stroke();
+          ctx.fillStyle = f.c;
+          for (let i = 0; i < 5; i++) {
+            const a = i * TAU / 5 + t * 0.0003;
+            circle(ctx, fx + sway + Math.cos(a) * size * 0.9, fy + Math.sin(a) * size * 0.9, size * 0.75);
+          }
+          ctx.fillStyle = "#ffb703";
+          circle(ctx, fx + sway, fy, size * 0.45);
+        }
+
+        // Өвс
+        const gr = easeOut(clamp(p / 0.5));
+        ctx.lineWidth = Math.max(1.5, w * 0.004);
+        ctx.lineCap = "round";
+        for (const bl of S.blades) {
+          const bx = bl.x * w, bh = bl.h * h * gr;
+          const sway = Math.sin(t * 0.0018 + bl.ph) * bh * 0.25;
+          ctx.strokeStyle = bl.c;
+          ctx.beginPath();
+          ctx.moveTo(bx, h);
+          ctx.quadraticCurveTo(bx + sway * 0.4, h - bh * 0.6, bx + sway, h - bh);
+          ctx.stroke();
+        }
+
+        // Эрвээхэй
+        const fa = clamp((p - 0.35) / 0.3);
+        if (fa > 0) {
+          for (const bf of S.flies) {
+            const x = w * (0.5 + 0.38 * Math.sin(t * 0.00035 * bf.sp + bf.ph));
+            const y = h * (0.42 + 0.1 * Math.sin(t * 0.0011 * bf.sp + bf.ph * 2));
+            const flap = 0.25 + 0.75 * Math.abs(Math.sin(t * 0.018 * bf.sp + bf.ph));
+            const s = m * 0.025;
+            ctx.save();
+            ctx.globalAlpha = fa;
+            ctx.translate(x, y);
+            ctx.save();
+            ctx.scale(flap, 1);
+            ctx.fillStyle = bf.c;
+            for (const dir of [-1, 1]) {
+              ctx.beginPath(); ctx.ellipse(dir * s * 0.7, -s * 0.35, s * 0.75, s * 0.55, 0, 0, TAU); ctx.fill();
+              ctx.beginPath(); ctx.ellipse(dir * s * 0.55, s * 0.4, s * 0.5, s * 0.4, 0, 0, TAU); ctx.fill();
+            }
+            ctx.restore();
+            ctx.fillStyle = "#3d2b1f";
+            ctx.fillRect(-s * 0.08, -s * 0.6, s * 0.16, s * 1.3);
+            ctx.restore();
+          }
+        }
+      },
+    };
+
+    // ---------- 4. Оддын зүрх ----------
+    IMPL.stars = {
+      text: "#ffffff",
+      init() {
+        const cols = ["#ffffff", "#ffccd5", "#ff8fab", "#ffd6ff", "#c8b6ff"];
+        const mk = (hx, hy) => ({ hx, hy, sx: rand(-0.1, 1.1), sy: rand(-0.1, 1.1), d: rand(0, 0.35), r: rand(0.8, 1.8), c: pick(cols), tw: rand(0, TAU) });
+        const ps = [];
+        for (let k = 0; k < 170; k++) { const [x, y] = heartXY(k / 170 * TAU); ps.push(mk(x, y)); }
+        for (let k = 0; k < 110; k++) {
+          const [x, y] = heartXY(rand(0, TAU));
+          const s = Math.sqrt(Math.random()) * 0.85;
+          ps.push(mk(x * s, (y + 2.5) * s - 2.5));
+        }
+        const bg = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random(), r: rand(0.4, 1.4), ph: rand(0, TAU) }));
+        return { ps, bg };
+      },
+      render(ctx, w, h, t, S, b) {
+        const p = t / D;
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, "#0b0821");
+        g.addColorStop(1, "#2a0f3d");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.fillStyle = "#fff";
+        for (const s of S.bg) {
+          ctx.globalAlpha = 0.25 + 0.6 * Math.abs(Math.sin(t * 0.0015 + s.ph));
+          circle(ctx, s.x * w, s.y * h, s.r);
+        }
+
+        const u = Math.min(b.w / 36, b.h / 33);
+        const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+        const bs = p >= 1 ? beatScale(t - D) : 1;
+        ctx.globalCompositeOperation = "lighter";
+        for (const pt of S.ps) {
+          const q = easeInOut(clamp((p - pt.d) / 0.6));
+          const tx = cx + pt.hx * u * bs, ty = cy - (pt.hy + 2.5) * u * bs;
+          const x = pt.sx * w + (tx - pt.sx * w) * q;
+          const y = pt.sy * h + (ty - pt.sy * h) * q;
+          const tw = 0.6 + 0.4 * Math.sin(t * 0.004 + pt.tw);
+          const rr = pt.r * Math.max(0.7, u / 11);
+          ctx.fillStyle = pt.c;
+          ctx.globalAlpha = 0.18 * tw;
+          circle(ctx, x, y, rr * 3.2);
+          ctx.globalAlpha = tw;
+          circle(ctx, x, y, rr);
+        }
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 1;
+      },
+    };
+
+    // ---------- 5. Наран цэцэг ----------
+    IMPL.sunflower = {
+      text: "#7a3e00",
+      init() {
+        const ring = (n, off) => Array.from({ length: n }, (_, k) => ({ a: (k + off) / n * TAU + rand(-0.04, 0.04), l: rand(0.9, 1.1), d: Math.random() }));
+        return { back: ring(34, 0.5), front: ring(34, 0), NS: 420 };
+      },
+      render(ctx, w, h, t, S, b) {
+        const p = t / D;
+        const sky = ctx.createLinearGradient(0, 0, 0, h);
+        sky.addColorStop(0, "#9bd0ff");
+        sky.addColorStop(0.75, "#e3f4ff");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Талбай
+        ctx.fillStyle = "#80c891";
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.84);
+        ctx.quadraticCurveTo(w / 2, h * 0.78, w, h * 0.84);
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.fill();
+
+        const Rs = Math.min(b.w, b.h) * 0.16;
+        const fx = b.x + b.w / 2, fy = b.y + b.h * 0.36, base = h;
+
+        // Иш, навч
+        const sp = easeOut(clamp(p / 0.2));
+        ctx.strokeStyle = "#2d6a4f";
+        ctx.lineWidth = Rs * 0.12;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(fx, base);
+        ctx.lineTo(fx, base - (base - fy) * sp);
+        ctx.stroke();
+        const ls = easeBack(clamp((p - 0.12) / 0.2));
+        if (ls > 0.001) {
+          const ly = base - (base - fy) * 0.45, L = Rs * 1.1;
+          for (const ang of [-2.6, -0.55]) {
+            ctx.save();
+            ctx.translate(fx, ly);
+            ctx.rotate(ang);
+            ctx.scale(ls, ls);
+            ctx.fillStyle = "#40916c";
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(L * 0.5, -L * 0.35, L, 0);
+            ctx.quadraticCurveTo(L * 0.5, L * 0.35, 0, 0);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+
+        ctx.save();
+        ctx.translate(fx, fy);
+        if (p >= 1) { const s = beatScale(t - D); ctx.scale(s, s); }
+
+        // Дэлбээ
+        const petals = (ring, color, start, len) => {
+          ctx.fillStyle = color;
+          for (const pt of ring) {
+            const q = easeBack(clamp((p - start - pt.d * 0.2) / 0.25));
+            if (q <= 0.001) continue;
+            const L = Rs * 1.05 * pt.l * len * q;
+            ctx.save();
+            ctx.rotate(pt.a);
+            ctx.beginPath();
+            ctx.ellipse(Rs * 0.8 + L / 2, 0, Math.max(0.1, L / 2), Rs * 0.17 * Math.min(1, q + 0.2), 0, 0, TAU);
+            ctx.fill();
+            ctx.restore();
+          }
+        };
+        petals(S.back, "#f48c06", 0.5, 0.95);
+        petals(S.front, "#ffba08", 0.58, 1);
+
+        // Үрийн хэсэг (алтан өнцгийн спираль)
+        const dq = easeOut(clamp((p - 0.08) / 0.15));
+        if (dq > 0) {
+          ctx.fillStyle = "#4a2511";
+          circle(ctx, 0, 0, Rs * 1.02 * dq);
+        }
+        const count = Math.floor(easeOut(clamp((p - 0.1) / 0.5)) * S.NS);
+        for (let n = 0; n < count; n++) {
+          const ang = n * 2.399963;
+          const r = Rs * 0.98 * Math.sqrt((n + 0.5) / S.NS);
+          ctx.fillStyle = `hsl(${28 + (n % 5) * 3}, 70%, ${20 + (n % 3) * 7}%)`;
+          circle(ctx, r * Math.cos(ang), r * Math.sin(ang), Rs * 0.045);
+        }
+        ctx.restore();
+      },
+    };
+
+    // ---------- 6. Интоорын цэцэг (сакура) ----------
+    IMPL.sakura = {
+      text: "#c9184a",
+      init() {
+        const cols = ["#ffb3c6", "#ffc8dd", "#ff8fab", "#ffe5ec", "#fb6f92"];
+        const MAX = 7;
+        const br = [], bl = [];
+        const blossom = (x, y) => bl.push({ x, y, r: rand(0.7, 1.3), c: pick(cols), d: rand(0.5, 0.85) });
+        const up = -Math.PI / 2;
+        function grow(x, y, ang, len, d, wd) {
+          const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+          br.push({ x1: x, y1: y, x2, y2, d, w: wd });
+          if (d >= MAX) {
+            for (let i = 0; i < 3; i++) blossom(x2 + rand(-0.06, 0.06), y2 + rand(-0.06, 0.06));
+            return;
+          }
+          if (d >= 4 && Math.random() < 0.35) blossom(x2, y2);
+          const spread = d === 0 ? 0.45 : rand(0.3, 0.55);
+          const nl = () => len * rand(0.68, 0.82);
+          const bend = a => a + (up - a) * 0.08;
+          grow(x2, y2, bend(ang - spread * rand(0.6, 1.1)), nl(), d + 1, wd * 0.68);
+          grow(x2, y2, bend(ang + spread * rand(0.6, 1.1)), nl(), d + 1, wd * 0.68);
+          if (d > 0 && Math.random() < 0.25) grow(x2, y2, bend(ang + rand(-0.15, 0.15)), nl(), d + 1, wd * 0.6);
+        }
+        grow(0, 0, up + rand(-0.05, 0.05), 1, 0, 0.1);
+
+        let minX = 0, maxX = 0, minY = 0;
+        for (const s of br) { minX = Math.min(minX, s.x2); maxX = Math.max(maxX, s.x2); minY = Math.min(minY, s.y2); }
+        for (const s of bl) { minX = Math.min(minX, s.x); maxX = Math.max(maxX, s.x); minY = Math.min(minY, s.y); }
+
+        const petals = Array.from({ length: 36 }, () => ({ x: Math.random(), sp: rand(0.04, 0.09), off: Math.random(), ph: rand(0, TAU), s: rand(0.7, 1.3) }));
+        return { br, bl, minX, maxX, minY, petals, MAX };
+      },
+      render(ctx, w, h, t, S, b) {
+        const p = t / D;
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, "#ffd6e0");
+        g.addColorStop(0.7, "#fff0f5");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+
+        const baseY = b.y + b.h * 0.96;
+        ctx.fillStyle = "#b7e4c7";
+        ctx.beginPath();
+        ctx.moveTo(0, baseY + 12);
+        ctx.quadraticCurveTo(w / 2, baseY - 18, w, baseY + 12);
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.fill();
+
+        const k = Math.min(b.w * 0.92 / (S.maxX - S.minX), b.h * 0.88 / (0 - S.minY));
+        const mid = (S.minX + S.maxX) / 2;
+        const X = x => b.x + b.w / 2 + (x - mid) * k;
+        const Y = y => baseY + y * k;
+
+        // Мөчир
+        const gp = clamp(p / 0.55) * (S.MAX + 1);
+        ctx.strokeStyle = "#6b3e2e";
+        ctx.lineCap = "round";
+        for (const s of S.br) {
+          const q = clamp(gp - s.d);
+          if (q <= 0) continue;
+          ctx.lineWidth = Math.max(0.8, s.w * k);
+          ctx.beginPath();
+          ctx.moveTo(X(s.x1), Y(s.y1));
+          ctx.lineTo(X(s.x1 + (s.x2 - s.x1) * q), Y(s.y1 + (s.y2 - s.y1) * q));
+          ctx.stroke();
+        }
+
+        // Цэцэг
+        ctx.globalAlpha = 0.9;
+        for (const f of S.bl) {
+          const q = clamp((p - f.d) / 0.15);
+          if (q <= 0) continue;
+          ctx.fillStyle = f.c;
+          circle(ctx, X(f.x), Y(f.y), Math.max(1, 0.05 * f.r * k * easeBack(q)));
+        }
+
+        // Унах дэлбээ
+        const a = clamp((p - 0.55) / 0.3);
+        if (a > 0) {
+          const sf = Math.min(w, h) / 400;
+          ctx.fillStyle = "#ffafcc";
+          for (const pt of S.petals) {
+            const y = ((((t / 1000) * pt.sp + pt.off) % 1.15) - 0.08) * h;
+            const x = pt.x * w + Math.sin(t * 0.0011 + pt.ph) * w * 0.05;
+            ctx.save();
+            ctx.globalAlpha = a * 0.85;
+            ctx.translate(x, y);
+            ctx.rotate(t * 0.0015 * pt.s + pt.ph);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 5 * sf * pt.s, 2.8 * sf * pt.s, 0, 0, TAU);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+        ctx.globalAlpha = 1;
+      },
+    };
+
+    // =====================================================
+    //  ҮНДСЭН УДИРДЛАГА
+    // =====================================================
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d");
     const intro = document.getElementById("intro");
+    const picker = document.getElementById("picker");
+    const grid = document.getElementById("grid");
     const controls = document.getElementById("controls");
     const soundBtn = document.getElementById("sound");
-    const colors = ["red", "blue", "lime", "yellow", "cyan", "magenta", "orange", "pink"];
-    const N = 120;
-    const SCALE = 15;
-    let W = 0, H = 0, unit = 1, cx = 0, cy = 0;
-    let lines = [];
-    let drawn = 0;
-    let startTime = 0;
-    let rafId = null;
+
+    let W = 0, H = 0, box = { x: 0, y: 0, w: 0, h: 0 };
+    let currentIndex = -1, state = null, t0 = 0, rafId = null;
+
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 3);
       W = window.innerWidth;
@@ -186,94 +829,80 @@
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      // Зүрх ойролцоогоор 500 x 470 нэгж. Доод товчны зай үлдээнэ.
-      const bottomSpace = 90;
-      const topSpace = 40;
-      unit = Math.min((W - 32) / 500, (H - bottomSpace - topSpace) / 470);
-      cx = W / 2;
-      cy = topSpace + (H - bottomSpace - topSpace) / 2;
-      redrawAll();
-    }
-    function toScreen(x, y) {
-      return [cx + x * unit, cy - (y + 37) * unit];
-    }
-    // ---------- Шугамуудыг урьдчилан тооцоолох ----------
-    function makeLines() {
-      lines = [];
-      for (let k = 0; k < N; k++) {
-        const a = k * (Math.PI * 2) / N;
-        const x = 16 * Math.pow(Math.sin(a), 3) * SCALE;
-        const y = (13 * Math.cos(a) - 5 * Math.cos(2 * a)
-                 - 2 * Math.cos(3 * a) - Math.cos(4 * a)) * SCALE;
-        lines.push({ x, y, c: colors[Math.floor(Math.random() * colors.length)] });
-      }
+      // Дээр бичгийн зай, доор товчны зай
+      box = { x: 16, y: 80, w: W - 32, h: H - 80 - 96 };
     }
 
-    function clear() {
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, W, H);
+    function drawMessage(scene, impl, t) {
+      if (!scene.message) return;
+      const a = clamp((t - D) / 900);
+      if (a <= 0) return;
+      const fs = Math.round(clamp(W * 0.075, 22, 40));
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.font = `700 ${fs}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = impl.text;
+      ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+      ctx.shadowBlur = 10;
+      ctx.fillText(scene.message, W / 2, 48 + (1 - a) * 10);
+      ctx.restore();
     }
 
-    function drawLine(l) {
-      const [sx, sy] = toScreen(0, 40);
-      const [ex, ey] = toScreen(l.x, l.y);
-
-      ctx.strokeStyle = l.c;
-      ctx.shadowColor = l.c;           // Гэрэлтэх эффект
-      ctx.shadowBlur = 6 * unit;
-      ctx.lineWidth = Math.max(1, unit);
-      ctx.lineCap = "round";
-
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(ex, ey);
-      ctx.stroke();
-
-      // 8 цацрагтай од
-      const r = 6 * unit;
-      ctx.beginPath();
-      for (let j = 0; j < 8; j++) {
-        const ang = j * Math.PI / 4;
-        ctx.moveTo(ex, ey);
-        ctx.lineTo(ex + r * Math.cos(ang), ey + r * Math.sin(ang));
-      }
-      ctx.stroke();
+    function frame(now) {
+      const scene = SCENES[currentIndex];
+      const impl = IMPL[scene.id];
+      const t = now - t0;
+      ctx.save();
+      impl.render(ctx, W, H, t, state, box);
+      ctx.restore();
+      drawMessage(scene, impl, t);
+      rafId = requestAnimationFrame(frame);
     }
 
-    function redrawAll() {
-      clear();
-      for (let k = 0; k < drawn; k++) drawLine(lines[k]);
-    }
-
-    // ---------- Хөдөлгөөн ----------
-    function loop(now) {
-      const target = Math.min(N, Math.floor((now - startTime) / CONFIG.drawMs * N) + 1);
-      while (drawn < target) drawLine(lines[drawn++]);
-
-      if (drawn < N) {
-        rafId = requestAnimationFrame(loop);
-      } else {
-        canvas.classList.add("beat");   // Дуусахад зүрх цохилно
-      }
-    }
-
-    function startDrawing() {
+    function playScene(i) {
+      currentIndex = i;
+      state = IMPL[SCENES[i].id].init();
       cancelAnimationFrame(rafId);
-      canvas.classList.remove("beat");
-      makeLines();
-      drawn = 0;
-      clear();
-      startTime = performance.now();
-      rafId = requestAnimationFrame(loop);
+      t0 = performance.now();
+      rafId = requestAnimationFrame(frame);
+      playClip(SCENES[i]);
     }
+
+    // ---------- Цэсний зургууд (дуусах үеийн байдлаар) ----------
+    function renderThumbs() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      grid.querySelectorAll("canvas").forEach((c, i) => {
+        const r = c.getBoundingClientRect();
+        if (!r.width) return;
+        c.width = Math.round(r.width * dpr);
+        c.height = Math.round(r.height * dpr);
+        const g = c.getContext("2d");
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const impl = IMPL[SCENES[i].id];
+        impl.render(g, r.width, r.height, D + 700, impl.init(), { x: 6, y: 6, w: r.width - 12, h: r.height - 12 });
+      });
+    }
+
+    SCENES.forEach((s, i) => {
+      const btn = document.createElement("button");
+      btn.className = "item";
+      btn.style.setProperty("--i", i);
+      btn.innerHTML = `<canvas class="thumb"></canvas><span class="label">${s.emoji}&nbsp; ${s.name}</span>`;
+      btn.addEventListener("click", () => {
+        picker.classList.add("hide");
+        controls.hidden = false;
+        playScene(i);   // iPhone: дуу товч дарахад эхлэх ёстой
+      });
+      grid.appendChild(btn);
+    });
 
     // ---------- Дуу ----------
-    const audio = new Audio(CONFIG.audioSrc);
+    const audio = new Audio();
     audio.preload = "auto";
     let actx = null, gain = null, stopTimer = null, pauseTimer = null;
 
-    // iPhone дээр audio.volume ажилладаггүй тул Web Audio-гаар fade хийнэ
     function setupAudioGraph() {
       if (actx) return;
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -294,18 +923,19 @@
       gain.gain.linearRampToValueAtTime(to, t + seconds);
     }
 
-    function playClip() {
+    function playClip(scene) {
       setupAudioGraph();
       if (actx && actx.state === "suspended") actx.resume();
       clearTimeout(stopTimer);
       clearTimeout(pauseTimer);
 
-      const seek = () => { try { audio.currentTime = CONFIG.audioStart; } catch (e) {} };
+      if (audio.getAttribute("src") !== scene.song) audio.src = scene.song;
+      const seek = () => { try { audio.currentTime = scene.start; } catch (e) {} };
       if (audio.readyState >= 1) seek();
       else audio.addEventListener("loadedmetadata", seek, { once: true });
 
       if (gain) gain.gain.value = 0;
-      audio.play().then(() => fade(1, 1)).catch(() => {});   // mp3 байхгүй бол чимээгүй үргэлжилнэ
+      audio.play().then(() => fade(1, 1)).catch(() => {});
 
       stopTimer = setTimeout(() => {
         fade(0, 1);
@@ -313,19 +943,29 @@
       }, (CONFIG.audioDuration - 1) * 1000);
     }
 
-    // ---------- Товчнууд ----------
-    function start() {
-      playClip();          // iPhone: дуу заавал товч дарсан үед эхлэх ёстой
-      startDrawing();
+    function stopAudio() {
+      clearTimeout(stopTimer);
+      clearTimeout(pauseTimer);
+      fade(0, 0.3);
+      pauseTimer = setTimeout(() => audio.pause(), 350);
     }
 
+    // ---------- Товчнууд ----------
     document.getElementById("startBtn").addEventListener("click", () => {
       intro.classList.add("hide");
-      controls.hidden = false;
-      start();
+      picker.classList.remove("hide");
+      renderThumbs();
     });
 
-    document.getElementById("replay").addEventListener("click", start);
+    document.getElementById("replay").addEventListener("click", () => playScene(currentIndex));
+
+    document.getElementById("menu").addEventListener("click", () => {
+      cancelAnimationFrame(rafId);
+      stopAudio();
+      controls.hidden = true;
+      picker.classList.remove("hide");
+      picker.scrollTop = 0;
+    });
 
     soundBtn.addEventListener("click", () => {
       audio.muted = !audio.muted;
@@ -333,17 +973,19 @@
       soundBtn.setAttribute("aria-label", audio.muted ? "Дуу асаах" : "Дуу унтраах");
     });
 
-    // Хэмжээ өөрчлөгдөхөд дахин эхлэхгүй, зурсныг нь л дахин зурна
-    // (iPhone-ийн хаягийн мөр нуугдах үед зураг алга болохоос сэргийлнэ)
     let resizeQueued = false;
     window.addEventListener("resize", () => {
       if (resizeQueued) return;
       resizeQueued = true;
-      requestAnimationFrame(() => { resizeQueued = false; resize(); });
+      requestAnimationFrame(() => {
+        resizeQueued = false;
+        resize();
+        if (!picker.classList.contains("hide")) renderThumbs();
+      });
     });
 
-    makeLines();
     resize();
+    renderThumbs();
   </script>
 </body>
 </html>
